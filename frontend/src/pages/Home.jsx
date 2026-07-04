@@ -37,11 +37,11 @@ export default function Home() {
           revealing exactly what's missing — and generating a roadmap to close that gap.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Link to="/upload-job" className="btn-primary">
-            Upload Job Description
+          <Link to="/register" className="btn-primary">
+            Get Started — Sign Up
           </Link>
-          <Link to="/upload-resume" className="btn-secondary">
-            Upload Resume
+          <Link to="/login" className="btn-secondary">
+            Log In
           </Link>
         </div>
       </section>
@@ -69,8 +69,8 @@ export default function Home() {
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/70">
             Run your first analysis in under two minutes — no setup required.
           </p>
-          <Link to="/upload-job" className="btn-primary mt-6 inline-flex">
-            Start Analysis
+          <Link to="/register" className="btn-primary mt-6 inline-flex">
+            Create Free Account
           </Link>
         </div>
       </section>

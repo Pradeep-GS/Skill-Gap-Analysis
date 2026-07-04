@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner.jsx'
 import Toast from '../components/Toast.jsx'
-import { getJobs, getCandidates, runAnalysis } from '../services/api.js'
+import { getJobs, getMyCandidateProfile, runAnalysis } from '../services/api.js'
 
 function formatDate(dateStr) {
   try {
@@ -19,8 +19,7 @@ function formatDate(dateStr) {
 export default function Jobs() {
   const navigate = useNavigate()
   const [jobs, setJobs] = useState([])
-  const [candidates, setCandidates] = useState([])
-  const [selectedCandidate, setSelectedCandidate] = useState({}) // { [jobId]: candidateId }
+  const [hasResume, setHasResume] = useState(true)
   const [analyzingJobId, setAnalyzingJobId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState({ message: '', type: 'success' })
@@ -28,9 +27,15 @@ export default function Jobs() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [jobsRes, candidatesRes] = await Promise.all([getJobs(), getCandidates()])
+      const jobsRes = await getJobs()
       setJobs(jobsRes.jobs || [])
-      setCandidates(candidatesRes.candidates || [])
+
+      try {
+        await getMyCandidateProfile()
+        setHasResume(true)
+      } catch {
+        setHasResume(false)
+      }
     } catch (err) {
       setToast({ message: err.message, type: 'error' })
     } finally {
@@ -43,18 +48,16 @@ export default function Jobs() {
   }, [])
 
   const handleAnalyze = async (jobId) => {
-    const candidateId = selectedCandidate[jobId]
-    if (!candidateId) {
-      setToast({ message: 'Please select a candidate first.', type: 'error' })
+    if (!hasResume) {
+      setToast({ message: 'Please upload your resume first.', type: 'error' })
+      setTimeout(() => navigate('/upload-resume'), 1200)
       return
     }
 
     setAnalyzingJobId(jobId)
     try {
-      const { analysis } = await runAnalysis(jobId, candidateId)
+      const { analysis } = await runAnalysis(jobId)
       localStorage.setItem('lastAnalysisId', analysis.id)
-      localStorage.setItem('lastJobId', jobId)
-      localStorage.setItem('lastCandidateId', candidateId)
       setToast({ message: 'Analysis complete! Redirecting to dashboard...', type: 'success' })
       setTimeout(() => navigate('/dashboard'), 800)
     } catch (err) {
@@ -67,7 +70,7 @@ export default function Jobs() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-24">
-        <Spinner label="Loading saved jobs..." size="lg" />
+        <Spinner label="Loading job postings..." size="lg" />
       </div>
     )
   }
@@ -76,24 +79,34 @@ export default function Jobs() {
     <div className="mx-auto max-w-5xl px-6 py-14">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-secondary-500">Saved Job Descriptions</h1>
+          <h1 className="text-3xl font-bold text-secondary-500">Job Postings</h1>
           <p className="mt-1 text-sm text-secondary-500/70">
-            Pick a candidate for any job below and run the AI skill gap analysis instantly.
+            Browse open roles and run an instant AI skill gap analysis against your resume.
           </p>
         </div>
-        <button onClick={() => navigate('/upload-job')} className="btn-secondary">
-          + Add New Job
+        <button onClick={() => navigate('/upload-resume')} className="btn-secondary">
+          Manage My Resume
         </button>
       </div>
 
+      {!hasResume && (
+        <div className="card mt-6 border-amber-300 bg-amber-50">
+          <p className="text-sm text-amber-700">
+            You haven't uploaded a resume yet.{' '}
+            <button
+              onClick={() => navigate('/upload-resume')}
+              className="font-semibold underline"
+            >
+              Upload it now
+            </button>{' '}
+            to start analyzing job matches.
+          </p>
+        </div>
+      )}
+
       {jobs.length === 0 ? (
         <div className="card mt-8 text-center">
-          <p className="text-sm text-secondary-500/70">
-            No jobs saved yet. Upload a job description to get started.
-          </p>
-          <button onClick={() => navigate('/upload-job')} className="btn-primary mt-5">
-            Upload Job Description
-          </button>
+          <p className="text-sm text-secondary-500/70">No jobs have been posted yet. Check back soon!</p>
         </div>
       ) : (
         <div className="mt-8 space-y-5">
@@ -129,22 +142,7 @@ export default function Jobs() {
                 </div>
               )}
 
-              <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
-                <select
-                  value={selectedCandidate[job.id] || ''}
-                  onChange={(e) =>
-                    setSelectedCandidate((prev) => ({ ...prev, [job.id]: e.target.value }))
-                  }
-                  className="input-field !py-2 sm:w-64"
-                >
-                  <option value="">Select a candidate...</option>
-                  {candidates.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.email})
-                    </option>
-                  ))}
-                </select>
-
+              <div className="mt-5 border-t border-slate-100 pt-4">
                 <button
                   onClick={() => handleAnalyze(job.id)}
                   disabled={analyzingJobId === job.id}
@@ -152,18 +150,6 @@ export default function Jobs() {
                 >
                   {analyzingJobId === job.id ? 'Analyzing...' : 'Analyze'}
                 </button>
-
-                {candidates.length === 0 && (
-                  <span className="text-xs text-secondary-500/50">
-                    No candidates yet —{' '}
-                    <button
-                      onClick={() => navigate('/upload-resume')}
-                      className="font-medium text-primary-600 underline"
-                    >
-                      upload a resume
-                    </button>
-                  </span>
-                )}
               </div>
             </div>
           ))}

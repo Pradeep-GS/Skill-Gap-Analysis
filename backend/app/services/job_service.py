@@ -6,7 +6,8 @@ from app.services.groq_service import extract_skills
 
 
 def create_job(role_name: str, company_name: str, job_description_text: str,
-               experience_required: str = None) -> dict:
+                experience_required: str = None, hr_id: str = None,
+                hr_name: str = None, hr_email: str = None) -> dict:
     if not job_description_text or not job_description_text.strip():
         raise HTTPException(status_code=400, detail="Job description text is empty.")
 
@@ -18,6 +19,9 @@ def create_job(role_name: str, company_name: str, job_description_text: str,
         "job_description_text": job_description_text,
         "required_skills": required_skills,
         "experience_required": experience_required,
+        "hr_id": hr_id,
+        "hr_name": hr_name,
+        "hr_email": hr_email,
         "created_at": datetime.utcnow(),
     }
 

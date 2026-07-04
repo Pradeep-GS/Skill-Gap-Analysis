@@ -3,6 +3,34 @@ from typing import List, Optional
 from datetime import datetime
 
 
+# ---------- Auth ----------
+
+class UserRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str = Field(min_length=6)
+    role: str  # "hr" or "candidate"
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str
+    created_at: datetime
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
 # ---------- Job Description ----------
 
 class JobDescriptionCreate(BaseModel):
@@ -19,6 +47,9 @@ class JobDescriptionResponse(BaseModel):
     job_description_text: str
     required_skills: List[str] = []
     experience_required: Optional[str] = None
+    hr_id: Optional[str] = None
+    hr_name: Optional[str] = None
+    hr_email: Optional[str] = None
     created_at: datetime
 
 
@@ -42,7 +73,6 @@ class CandidateResponse(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     job_id: str
-    candidate_id: str
 
 
 class AnalysisResult(BaseModel):

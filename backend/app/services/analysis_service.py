@@ -3,13 +3,14 @@ from fastapi import HTTPException
 from app.database import get_collection
 from app.utils.helpers import to_object_id, serialize_document, classify_match
 from app.services.job_service import get_job
-from app.services.candidate_service import get_candidate
+from app.services.candidate_service import get_candidate_by_user_id
 from app.services.groq_service import analyze_skill_gap
+from app.services.email_service import notify_high_match
 
 
-def run_analysis(job_id: str, candidate_id: str) -> dict:
+def run_analysis(job_id: str, user_id: str) -> dict:
     job = get_job(job_id)
-    candidate = get_candidate(candidate_id)
+    candidate = get_candidate_by_user_id(user_id)
 
     job_skills = job.get("required_skills", [])
     candidate_skills = candidate.get("extracted_skills", [])
@@ -17,12 +18,12 @@ def run_analysis(job_id: str, candidate_id: str) -> dict:
     if not job_skills:
         raise HTTPException(
             status_code=400,
-            detail="This job has no extracted required skills. Re-upload the job description.",
+            detail="This job has no extracted required skills. Ask HR to re-upload the job description.",
         )
     if not candidate_skills:
         raise HTTPException(
             status_code=400,
-            detail="This candidate has no extracted skills. Re-upload the resume.",
+            detail="No resume skills found for your account. Please upload your resume first.",
         )
 
     ai_result = analyze_skill_gap(job_skills, candidate_skills)
@@ -35,7 +36,7 @@ def run_analysis(job_id: str, candidate_id: str) -> dict:
 
     document = {
         "job_id": to_object_id(job_id),
-        "candidate_id": to_object_id(candidate_id),
+        "candidate_id": to_object_id(candidate["id"]),
         "matched_skills": matched,
         "missing_skills": ai_result.get("missing_skills") or [],
         "strengths": ai_result.get("strengths") or [],
@@ -54,7 +55,15 @@ def run_analysis(job_id: str, candidate_id: str) -> dict:
         raise HTTPException(status_code=503, detail=f"Database error while saving analysis: {exc}") from exc
 
     document["_id"] = result.inserted_id
-    return serialize_document(document)
+    analysis = serialize_document(document)
+
+    # Fire-and-forget notification; failures are logged, never raised.
+    try:
+        notify_high_match(job, candidate, analysis)
+    except Exception as exc:
+        print(f"[analysis_service] Notification step failed silently: {exc}")
+
+    return analysis
 
 
 def get_analysis(analysis_id: str) -> dict:

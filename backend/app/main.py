@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routes import job_routes, candidate_routes, analysis_routes
+from app.routes import job_routes, candidate_routes, analysis_routes, auth_routes
 
 app = FastAPI(
     title="Skill Gap Analysis Agent API",
@@ -53,6 +53,7 @@ async def health_check():
     return {"status": "ok"}
 
 
+app.include_router(auth_routes.router, prefix="/api")
 app.include_router(job_routes.router, prefix="/api")
 app.include_router(candidate_routes.router, prefix="/api")
 app.include_router(analysis_routes.router, prefix="/api")
