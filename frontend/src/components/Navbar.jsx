@@ -22,6 +22,9 @@ export default function Navbar() {
           <NavLink to="/" className={navLinkClass} end>
             Home
           </NavLink>
+          <NavLink to="/jobs" className={navLinkClass}>
+            Jobs
+          </NavLink>
           <NavLink to="/upload-job" className={navLinkClass}>
             Upload JD
           </NavLink>
