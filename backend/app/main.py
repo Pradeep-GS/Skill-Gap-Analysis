@@ -16,17 +16,24 @@ app = FastAPI(
 allowed_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    settings.FRONTEND_URL.rstrip("/"),
-    "https://skill-gap-analysis-gs.vercel.app", # explicit production frontend
+    "https://skill-gap-analysis-gs.vercel.app",
 ]
+
+# Also pull from env in case it's set differently in dashboard
+_env_frontend = settings.FRONTEND_URL.rstrip("/")
+if _env_frontend and _env_frontend not in allowed_origins:
+    allowed_origins.append(_env_frontend)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # covers all Vercel preview URLs
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
 
 
 @app.exception_handler(HTTPException)
