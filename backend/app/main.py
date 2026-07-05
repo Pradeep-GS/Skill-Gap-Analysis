@@ -13,7 +13,7 @@ app = FastAPI(
 )
 
 # CORS configuration
-allowed_origins = [settings.FRONTEND_URL, "https://skill-gap-analysis-gs.vercel.app"]
+allowed_origins = [settings.FRONTEND_URL, "http://localhost:5173/"]
 
 app.add_middleware(
     CORSMiddleware,
