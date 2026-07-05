@@ -1,5 +1,5 @@
 import io
-import pdfplumber
+from pypdf import PdfReader
 from fastapi import HTTPException, UploadFile
 
 
@@ -10,6 +10,7 @@ MAX_FILE_SIZE_MB = 10
 async def extract_text_from_pdf(file: UploadFile) -> str:
     """
     Reads an uploaded PDF file and extracts plain text from all pages.
+    Uses pypdf (pure Python, no C deps) so it works on Vercel serverless.
     Raises HTTPException on invalid file, empty content, or parse failure.
     """
     if file is None:
@@ -34,14 +35,14 @@ async def extract_text_from_pdf(file: UploadFile) -> str:
         )
 
     try:
+        reader = PdfReader(io.BytesIO(contents))
+        if len(reader.pages) == 0:
+            raise HTTPException(status_code=400, detail="PDF has no pages.")
         text_parts = []
-        with pdfplumber.open(io.BytesIO(contents)) as pdf:
-            if len(pdf.pages) == 0:
-                raise HTTPException(status_code=400, detail="PDF has no pages.")
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text_parts.append(page_text)
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
     except HTTPException:
         raise
     except Exception as exc:
