@@ -8,7 +8,7 @@ class Settings:
     MONGO_URI: str = os.getenv("MONGO_URI", "")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "skill_gap_agent")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://skill-gap-analysis-gs.vercel.app")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     def validate(self):
