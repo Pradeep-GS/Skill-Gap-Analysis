@@ -52,7 +52,7 @@ def notify_high_match(job: dict, candidate: dict, analysis: dict) -> None:
     hr_email = job.get("hr_email")
     matched = ", ".join(analysis.get("matched_skills", [])[:10]) or "N/A"
 
-    subject = f"🎯 Strong Match Found: {candidate_name} for {role_name} ({score}%)"
+    subject = f"Strong Match Found: {candidate_name} for {role_name} ({score}%)"
 
     if hr_email:
         hr_body = f"""
