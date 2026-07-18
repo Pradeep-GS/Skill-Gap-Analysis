@@ -11,6 +11,7 @@ SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME)
 HIGH_MATCH_THRESHOLD = float(os.getenv("HIGH_MATCH_THRESHOLD", "90"))
 
 
+
 def _send_email(to_email: str, subject: str, html_body: str) -> bool:
     """Sends a single email. Returns True on success, False on failure (never raises)."""
     if not SMTP_USERNAME or not SMTP_PASSWORD:
